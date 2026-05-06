@@ -21,7 +21,7 @@ public enum PathologyFamily {
         this.label = label;
         this.description = description;
     }
-
+    public String getKey() { return name(); }
     public String getLabel() { return label; }
     public String getDescription() { return description; }
 }

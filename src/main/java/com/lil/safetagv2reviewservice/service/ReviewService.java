@@ -143,9 +143,18 @@ public class ReviewService {
         review.setAddressIds(
                 request.getAddressIds() != null ? new ArrayList<>(request.getAddressIds()) : new ArrayList<>()
         );
+        ReviewStatus oldStatus = review.getStatus();
+
         if (review.getComment() != null && !review.getComment().isBlank()) {
-            ReviewStatus status = moderationClient.moderateComment(review.getComment());
-            review.setStatus(status);
+            ReviewStatus autoModStatus = moderationClient.moderateComment(review.getComment());
+
+            // Si l'auto-modération valide le nouveau texte, mais que l'avis posait problème avant
+            if (autoModStatus == ReviewStatus.APPROVED &&
+                    (oldStatus == ReviewStatus.REJECTED || oldStatus == ReviewStatus.REPORTED)) {
+                review.setStatus(ReviewStatus.PENDING);
+            } else {
+                review.setStatus(autoModStatus);
+            }
         } else {
             review.setStatus(ReviewStatus.APPROVED);
         }
@@ -156,18 +165,29 @@ public class ReviewService {
 
     public void reportReview(UUID reviewId) {
         Review review = reviewRepository.findById(reviewId)
-                .orElseThrow(() -> new RuntimeException("Avis introuvable"));
-
-        // On bascule le statut pour le masquer immédiatement
+                .orElseThrow(() -> new ResourceNotFoundException("Avis introuvable"));
         review.setStatus(ReviewStatus.REPORTED);
         reviewRepository.save(review);
     }
 
-    public void rejectReview(Long reviewId, String reason) {
+    public void updateReviewStatusToRejected(UUID reviewId) {
         Review review = reviewRepository.findById(reviewId)
-                .orElseThrow(() -> new RuntimeException("Avis non trouvé"));
-        review.setStatus(ReviewStatus.REJECTED); // Ou utilise un Enum si tu en as un
-        review.setRejectionReason(reason);
+                .orElseThrow(() -> new ResourceNotFoundException("Avis introuvable"));
+        review.setStatus(ReviewStatus.REJECTED);
+        reviewRepository.save(review);
+    }
+
+    public void markAsPending(UUID reviewId) {
+        Review review = reviewRepository.findById(reviewId)
+                .orElseThrow(() -> new ResourceNotFoundException("Avis introuvable"));
+        review.setStatus(ReviewStatus.PENDING);
+        reviewRepository.save(review);
+    }
+
+    public void approveReview(UUID reviewId) {
+        Review review = reviewRepository.findById(reviewId)
+                .orElseThrow(() -> new ResourceNotFoundException("Avis introuvable"));
+        review.setStatus(ReviewStatus.APPROVED);
         reviewRepository.save(review);
     }
 }

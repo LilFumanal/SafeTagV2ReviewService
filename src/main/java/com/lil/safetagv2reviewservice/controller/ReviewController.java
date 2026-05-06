@@ -67,11 +67,4 @@ public class ReviewController {
         return ResponseEntity.ok(updated);
     }
 
-    @PostMapping("/{id}/report")
-    public ResponseEntity<Void> reportReview(@PathVariable UUID id,
-                                             @RequestHeader(value = "Authorization", required = true) String authHeader) {
-        reviewService.reportReview(id);
-        return ResponseEntity.ok().build();
-    }
-
 }

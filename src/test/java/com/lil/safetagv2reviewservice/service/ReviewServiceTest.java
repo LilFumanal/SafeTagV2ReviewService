@@ -53,7 +53,6 @@ class ReviewServiceTest {
         review.setComment("Un commentaire tout à fait correct");
 
         when(userClient.userExists(any(UUID.class))).thenReturn(true);
-        when(moderationClient.isReviewValid(any(String.class))).thenReturn(true);
         when(reviewRepository.save(any(Review.class))).thenReturn(review);
 
         // Exécution (Act)
