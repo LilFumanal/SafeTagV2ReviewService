@@ -34,8 +34,10 @@ public class Review {
     @NotNull(message = "L'identifiant de l'auteur est obligatoire")
     private UUID userId;
 
-    @Column(nullable = false)
-    private List<UUID> addressIds;
+    @ElementCollection
+    @CollectionTable(name = "review_address_ids", joinColumns = @JoinColumn(name = "review_id"))
+    @Column(name = "address_id")
+    private List<UUID> addressIds = new ArrayList<>();
     private boolean isTeleconsultation = false;
 
     // --- Données de l'avis ---
@@ -88,4 +90,12 @@ public class Review {
 
     @Column(name = "rejection_reason", length = 500)
     private String rejectionReason;
+
+    @ElementCollection
+    @CollectionTable(name = "review_accessible_address_ids", joinColumns = @JoinColumn(name = "review_id"))
+    @Column(name = "address_id")
+    private List<UUID> accessibleAddressIds = new ArrayList<>();
+
+    @Column(nullable = false)
+    private boolean signLanguage = false; // Compétence du praticien (LSF)
 }

@@ -17,4 +17,6 @@ public class UpdateReviewRequest {
     private List<PathologyFamily> pathologies;
     private List<UUID> addressIds;
     private boolean isTeleconsultation;
+    private boolean wheelchairAccessible;
+    private boolean signLanguage;
 }

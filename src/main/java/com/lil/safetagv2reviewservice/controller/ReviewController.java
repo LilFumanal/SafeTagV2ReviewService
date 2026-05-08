@@ -2,6 +2,8 @@ package com.lil.safetagv2reviewservice.controller;
 
 import com.lil.safetagv2reviewservice.domain.TagCategory;
 import com.lil.safetagv2reviewservice.entity.Review;
+import com.lil.safetagv2reviewservice.models.ReviewCreateDTO;
+import com.lil.safetagv2reviewservice.models.ReviewResponseDTO;
 import com.lil.safetagv2reviewservice.models.UpdateReviewRequest;
 import com.lil.safetagv2reviewservice.service.ReviewService;
 import jakarta.validation.Valid;
@@ -29,24 +31,22 @@ public class ReviewController {
 
     // Créer un nouvel avis
     @PostMapping
-    public ResponseEntity<Review> createReview(
+    public ResponseEntity<ReviewResponseDTO> createReview(
             @RequestHeader("X-User-Id") UUID userId,
-            @RequestBody @Valid Review review) {
-        // Optionnel : on s'assure que l'ID du créateur est bien celui du token
-        review.setUserId(userId);
-        Review createdReview = reviewService.createReview(review);
+            @RequestBody @Valid ReviewCreateDTO dto) {
+        ReviewResponseDTO createdReview = reviewService.createReview(dto, userId);
         return ResponseEntity.status(HttpStatus.CREATED).body(createdReview);
     }
 
     // Récupérer les avis d'un praticien spécifique (PAGINÉ)
     @GetMapping("/practitioner/{rppsId}")
-    public ResponseEntity<Page<Review>> getReviewsByPractitioner(
+    public ResponseEntity<Page<ReviewResponseDTO>> getReviewsByPractitioner(
             @RequestHeader("X-User-Id") UUID userId,
             @PathVariable @Pattern(regexp = "^\\d{11}$", message = "Le numéro RPPS doit contenir exactement 11 chiffres") String rppsId,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size) {
 
-        Page<Review> reviews = reviewService.getReviewsByRppsId(rppsId, page, size);
+        Page<ReviewResponseDTO> reviews = reviewService.getReviewsByRppsId(rppsId, page, size);
         return ResponseEntity.ok(reviews);
     }
 
@@ -68,19 +68,30 @@ public class ReviewController {
         return ResponseEntity.ok(stats);
     }
 
-    // Récupérer les reviews d'un utilisateur
     @GetMapping("/me")
-    public List<Review> getMyReviews(@RequestHeader("X-User-Id") UUID userId) {
-        // On utilise l'ID du header plutôt qu'un ID en PathVariable pour plus de sécurité
-        return reviewService.getReviewsByUser(userId);
+    public ResponseEntity<List<ReviewResponseDTO>> getMyReviews(@RequestHeader("X-User-Id") UUID userId) {
+        List<ReviewResponseDTO> reviews = reviewService.getReviewsByUser(userId);
+        return ResponseEntity.ok(reviews);
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<Review> updateReview(
+    public ResponseEntity<ReviewResponseDTO> updateReview(
             @PathVariable UUID id,
             @RequestHeader("X-User-Id") UUID userId,
-            @RequestBody UpdateReviewRequest request) {
-        Review updated = reviewService.updateReview(id, userId, request);
+            @RequestBody @Valid UpdateReviewRequest request) {
+
+        ReviewResponseDTO updated = reviewService.updateReview(id, userId, request);
         return ResponseEntity.ok(updated);
     }
+
+    @GetMapping("/search-filters/sign-language")
+    public List<String> getFilterSignLanguage() {
+        return reviewService.getRppsWithSignLanguage();
+    }
+
+    @GetMapping("/search-filters/wheelchair-accessible")
+    public List<String> getFilterWheelchair() {
+        return reviewService.getRppsWithWheelchairAccess();
+    }
+
 }
