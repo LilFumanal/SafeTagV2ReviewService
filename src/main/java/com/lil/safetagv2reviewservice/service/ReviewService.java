@@ -168,12 +168,15 @@ public class ReviewService {
                 .orElseThrow(() -> new ResourceNotFoundException("Avis introuvable"));
         review.setStatus(ReviewStatus.REPORTED);
         reviewRepository.save(review);
+
+        moderationClient.reportReview(reviewId);
     }
 
-    public void updateReviewStatusToRejected(UUID reviewId) {
+    public void updateReviewStatusToRejected(UUID reviewId, String reason) {
         Review review = reviewRepository.findById(reviewId)
                 .orElseThrow(() -> new ResourceNotFoundException("Avis introuvable"));
         review.setStatus(ReviewStatus.REJECTED);
+        review.setRejectionReason(reason);
         reviewRepository.save(review);
     }
 

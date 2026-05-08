@@ -3,8 +3,10 @@ package com.lil.safetagv2reviewservice.client;
 import com.lil.safetagv2reviewservice.domain.ReviewStatus;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.client.RestTemplate;
 import java.util.Map;
+import java.util.UUID;
 
 @Service
 public class ModerationClient {
@@ -36,6 +38,20 @@ public class ModerationClient {
 
         } catch (Exception e) {
             throw new IllegalStateException("Le service de modération est temporairement indisponible. Veuillez réessayer plus tard.");
+        }
+    }
+
+    public void reportReview(UUID reviewId) {
+        // On construit l'URL de signalement
+        String reportUrl = moderationUrl + "/report/" + reviewId;
+
+        try {
+            // On envoie un POST vide (null) car l'ID est dans l'URL
+            restTemplate.postForLocation(reportUrl, null);
+        } catch (Exception e) {
+            // On log l'erreur mais on ne bloque pas l'utilisateur
+            // car le statut a déjà été changé en base locale
+            System.err.println("Erreur lors de la notification de modération : " + e.getMessage());
         }
     }
 }

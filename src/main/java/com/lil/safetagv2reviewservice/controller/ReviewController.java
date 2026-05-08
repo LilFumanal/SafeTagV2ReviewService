@@ -29,7 +29,11 @@ public class ReviewController {
 
     // Créer un nouvel avis
     @PostMapping
-    public ResponseEntity<Review> createReview(@RequestBody @Valid Review review) {
+    public ResponseEntity<Review> createReview(
+            @RequestHeader("X-User-Id") UUID userId,
+            @RequestBody @Valid Review review) {
+        // Optionnel : on s'assure que l'ID du créateur est bien celui du token
+        review.setUserId(userId);
         Review createdReview = reviewService.createReview(review);
         return ResponseEntity.status(HttpStatus.CREATED).body(createdReview);
     }
@@ -37,6 +41,7 @@ public class ReviewController {
     // Récupérer les avis d'un praticien spécifique (PAGINÉ)
     @GetMapping("/practitioner/{rppsId}")
     public ResponseEntity<Page<Review>> getReviewsByPractitioner(
+            @RequestHeader("X-User-Id") UUID userId,
             @PathVariable @Pattern(regexp = "^\\d{11}$", message = "Le numéro RPPS doit contenir exactement 11 chiffres") String rppsId,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size) {
@@ -45,26 +50,37 @@ public class ReviewController {
         return ResponseEntity.ok(reviews);
     }
 
+    @PostMapping("/{reviewId}/report")
+    public ResponseEntity<Void> reportReview(
+            @PathVariable UUID reviewId,
+            @RequestHeader("X-User-Id") UUID userId) {
+
+        reviewService.reportReview(reviewId);
+        return ResponseEntity.ok().build();
+    }
 
     // Récupérer les scores de tags pour un praticien spécifique
     @GetMapping("/practitioner/{rppsId}/stats")
-    public ResponseEntity<Map<TagCategory, Double>> getPractitionerStats(@PathVariable String rppsId) {
+    public ResponseEntity<Map<TagCategory, Double>> getPractitionerStats(
+            @RequestHeader("X-User-Id") UUID userId,
+            @PathVariable String rppsId) {
         Map<TagCategory, Double> stats = reviewService.getPractitionerStats(rppsId);
         return ResponseEntity.ok(stats);
     }
 
-    @GetMapping("/{userId}")
-    public List<Review> getByUser(@PathVariable UUID userId) {
+    // Récupérer les reviews d'un utilisateur
+    @GetMapping("/me")
+    public List<Review> getMyReviews(@RequestHeader("X-User-Id") UUID userId) {
+        // On utilise l'ID du header plutôt qu'un ID en PathVariable pour plus de sécurité
         return reviewService.getReviewsByUser(userId);
     }
+
     @PutMapping("/{id}")
     public ResponseEntity<Review> updateReview(
             @PathVariable UUID id,
             @RequestHeader("X-User-Id") UUID userId,
-            @RequestBody UpdateReviewRequest request
-    ) {
+            @RequestBody UpdateReviewRequest request) {
         Review updated = reviewService.updateReview(id, userId, request);
         return ResponseEntity.ok(updated);
     }
-
 }
