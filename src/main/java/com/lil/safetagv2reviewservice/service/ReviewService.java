@@ -3,6 +3,7 @@ package com.lil.safetagv2reviewservice.service;
 import com.lil.safetagv2reviewservice.client.ModerationClient;
 import com.lil.safetagv2reviewservice.client.RppsClient;
 import com.lil.safetagv2reviewservice.client.UserClient;
+import com.lil.safetagv2reviewservice.domain.PathologyFamily;
 import com.lil.safetagv2reviewservice.domain.ReviewStatus;
 import com.lil.safetagv2reviewservice.domain.TagCategory;
 import com.lil.safetagv2reviewservice.domain.TagVote;
@@ -84,36 +85,30 @@ public class ReviewService {
         return reviewMapper.toResponseDTO(savedReview);
     }
 
-    public List<ReviewResponseDTO> getReviewsByPractitioner(String rppsId) {
+    public List<Review> getReviewsByPractitioner(String rppsId) {
         return reviewRepository.findByRppsId(rppsId);
     }
 
     public Map<TagCategory, Double> getPractitionerStats(String rppsId) {
         List<ReviewTag> tags = reviewTagRepository.findByReview_RppsId(rppsId);
 
-        // 1. On groupe les tags par catégorie
-        Map<TagCategory, List<ReviewTag>> tagsByCategory = tags.stream()
-                .collect(Collectors.groupingBy(ReviewTag::getCategory));
+        if (tags.isEmpty()) return Collections.emptyMap();
 
-        Map<TagCategory, Double> stats = new HashMap<>();
-
-        tagsByCategory.forEach((category, tagList) -> {
-            // 2. On compte le nombre de votes positifs
-            long positiveVotes = tagList.stream()
-                    .filter(t -> t.getVote() == TagVote.POSITIVE)
-                    .count();
-
-            // 3. On calcule le pourcentage (Positifs / Total * 100)
-            double percentage = (double) positiveVotes / tagList.size() * 100;
-
-            // On arrondit à 1 décale pour la lisibilité
-            stats.put(category, Math.round(percentage * 10.0) / 10.0);
-        });
-
-        return stats;
+        return tags.stream()
+                .collect(Collectors.groupingBy(
+                        ReviewTag::getCategory,
+                        Collectors.collectingAndThen(
+                                Collectors.toList(),
+                                list -> {
+                                    long positive = list.stream().filter(t -> t.getVote() == TagVote.POSITIVE).count();
+                                    double percentage = (double) positive / list.size() * 100;
+                                    return Math.round(percentage * 10.0) / 10.0;
+                                }
+                        )
+                ));
     }
 
-    public Page<ReviewResponseDTO> getReviewsByRppsId(String rppsId, int page, int size) {
+    public Page<Review> getReviewsByRppsId(String rppsId, int page, int size) {
         Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
 
         return reviewRepository.findByRppsIdAndStatus(rppsId, ReviewStatus.APPROVED, pageable);
@@ -125,8 +120,8 @@ public class ReviewService {
                 .orElseThrow(() -> new ResourceNotFoundException("Avis introuvable pour l'ID : " + id));
     }
 
-    public List<ReviewResponseDTO> getReviewsByUser(UUID userId) {
-        return reviewRepository.findByUserId(userId);
+    public Page<ReviewResponseDTO> getReviewsByUser(UUID userId, Pageable pageable) {
+        return reviewRepository.findByUserId(userId, pageable);
     }
 
     @Transactional
@@ -144,7 +139,6 @@ public class ReviewService {
         // 3. Mise à jour des données simples
         review.setComment(request.getComment());
         review.setTeleconsultation(request.isTeleconsultation());
-        review.setWheelchairAccessible(request.isWheelchairAccessible());
         review.setSignLanguage(request.isSignLanguage());
 
         // 4. Gestion des collections (Tags)
@@ -220,12 +214,26 @@ public class ReviewService {
         reviewRepository.save(review);
     }
 
-    public List<String> getRppsWithSignLanguage() {
-        return reviewRepository.findRppsIdsWithSignLanguage();
+    // 2. Correction du type de retour et de l'argument pour l'accessibilité
+    public Page<String> getRppsWithWheelchairAccess(Pageable pageable) {
+        return reviewRepository.findRppsIdsWithWheelchairAccess(pageable);
     }
 
-    public List<String> getRppsWithWheelchairAccess() {
-        return reviewRepository.findRppsIdsWithWheelchairAccess();
+    // 3. Ajout de la pagination pour la langue des signes (cohérence)
+    public Page<String> getRppsWithSignLanguage(Pageable pageable) {
+        return reviewRepository.findRppsIdsWithSignLanguage(pageable);
+    }
+
+    // 4. Correction de l'appel au repository avec l'argument pageable manquant
+    public Page<String> getRppsMissingTags(List<TagCategory> categories, Pageable pageable) {
+        if (categories == null || categories.isEmpty()) {
+            return reviewRepository.findRppsIdsWithNoTagsAtAll(pageable);
+        }
+        // Ajout de pageable ici
+        return reviewRepository.findRppsIdsMissingSpecificCategories(categories, pageable);
+    }
+    public Page<String> getRppsByPathology(PathologyFamily pathology, Pageable pageable) {
+        return reviewRepository.findRppsIdsByPathology(pathology, pageable);
     }
 
 }

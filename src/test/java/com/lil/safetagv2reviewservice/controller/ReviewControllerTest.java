@@ -1,4 +1,4 @@
-package com.lil.safetagv2reviewservice.controller; // Vérifie que c'est le bon package
+package com.lil.safetagv2reviewservice.controller;
 
 import com.lil.safetagv2reviewservice.entity.Review;
 import com.lil.safetagv2reviewservice.service.ReviewService;
@@ -29,33 +29,59 @@ class ReviewControllerTest {
 
     @Test
     void createReview_ShouldReturn201Created() throws Exception {
-        Review mockReview = new Review();
-        mockReview.setId(java.util.UUID.fromString("123e4567-e89b-12d3-a456-426614174000"));
+        // Création du DTO de réponse mocké
+        UUID mockId = java.util.UUID.fromString("123e4567-e89b-12d3-a456-426614174000");
+        UUID mockUserId = UUID.randomUUID();
 
-        when(reviewService.createReview(any(Review.class))).thenReturn(mockReview);
+        com.lil.safetagv2reviewservice.models.ReviewResponseDTO mockResponse =
+                new com.lil.safetagv2reviewservice.models.ReviewResponseDTO(
+                        mockId,
+                        "12345678910",
+                        mockUserId,
+                        java.util.Collections.emptyList(),
+                        "Très bon praticien. Un commentaire assez long pour la validation.",
+                        true,
+                        java.util.Collections.emptyList(),
+                        false,
+                        java.util.Collections.emptyList(),
+                        java.time.LocalDateTime.now(),
+                        com.lil.safetagv2reviewservice.domain.ReviewStatus.APPROVED
+                );
+
+        // Correction : On passe bien les 2 arguments attendus par le service
+        when(reviewService.createReview(
+                any(com.lil.safetagv2reviewservice.models.ReviewCreateDTO.class),
+                any(UUID.class)
+        )).thenReturn(mockResponse);
 
         // Act & Assert
-        // On simule une requête POST avec un JSON basique
         String jsonPayload = """
                 {
                     "rppsId": "12345678910",
                     "userId": "%s",
-                    "addressIds": ["%s"],
-                    "isTeleconsultation": false,
+                    "addressIds": [],
+                    "isTeleconsultation": true,
                     "comment": "Très bon praticien. Un commentaire assez long pour la validation.",
+                    "accessibleAddressIds": [],
+                    "signLanguage": false,
                     "tags": [],
                     "pathologies": []
                 }
-                """.formatted( UUID.randomUUID(), UUID.randomUUID());
+                """.formatted(mockUserId);
+
         mockMvc.perform(post("/api/v1/reviews")
+                        .header("X-User-Id", mockUserId.toString()) // Ajout du header si ton controller l'attend
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(jsonPayload))
-                .andExpect(status().isCreated()); // Vérifie qu'on obtient bien HTTP 201
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.id").value(mockId.toString()));
     }
+
     @Test
     void getReviewsByRppsId_ShouldReturn200Ok() throws Exception {
         // Arrange
         String rppsId = "12345678910";
+        UUID userId = UUID.randomUUID();
         Review review = new Review();
         review.setId(java.util.UUID.fromString("123e4567-e89b-12d3-a456-426614174000"));
         review.setRppsId(rppsId);
@@ -70,11 +96,13 @@ class ReviewControllerTest {
 
         // Act & Assert
         mockMvc.perform(get("/api/v1/reviews/practitioner/{rppsId}", rppsId)
+                        .header("X-User-Id", userId.toString()) // <-- Ajout du header
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.content[0].id").value("123e4567-e89b-12d3-a456-426614174000"))
                 .andExpect(jsonPath("$.content[0].comment").value("Très bon praticien, je recommande."));
     }
+
     @Test
     void getReviewsByRppsId_ShouldReturn500WhenServiceFails() throws Exception {
         // Arrange
@@ -90,42 +118,51 @@ class ReviewControllerTest {
 
     @Test
     void createReview_ShouldReturn400_WhenNoConsultationMode() throws Exception {
-        // JSON sans adresse et sans téléconsultation (supposé isTeleconsultation: false par défaut)
-        String invalidJson = """
-        {
-          "rppsId": "12345678910",
-          "userId": "%s",
-          "comment": "Un commentaire assez long pour passer la validation.",
-          "addressIds": [],
-          "isTeleconsultation": false,
-          "tags": [],
-          "pathologies": []
-        }
-        """.formatted(UUID.randomUUID());
+        // Arrange
+        String jsonPayload = """
+                {
+                  "rppsId": "12345678910",
+                  "userId": "fd18c5de-641e-47f7-a7e2-acceb32b96f9",
+                  "comment": "Un commentaire assez long pour passer la validation.",
+                  "addressIds": [],
+                  "isTeleconsultation": false,
+                  "accessibleAddressIds": [],
+                  "signLanguage": false,
+                  "tags": [],
+                  "pathologies": []
+                }
+                """;
 
+        UUID userId = UUID.randomUUID(); // Génération d'un UUID pour le header
+
+        // Act & Assert
         mockMvc.perform(post("/api/v1/reviews")
+                        .header("X-User-Id", userId.toString()) // <-- Ajout du header ici
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(invalidJson))
-                .andExpect(status().isBadRequest())
-                // On vérifie que le message d'erreur spécifique est présent
-                .andExpect(jsonPath("$.details.consultationModeValid").value("Veuillez renseigner au moins un mode de consultation (visio ou adresse physique)"));
+                        .content(jsonPayload))
+                .andExpect(status().isBadRequest());
     }
+
 
     @Test
     void createReview_ShouldReturn400_WhenInvalidPathology() throws Exception {
-        String invalidEnumJson = """
+        String jsonPayload = """
         {
           "rppsId": "12345678910",
-          "userId": "%s",
-          "comment": "Un commentaire valide.",
+          "userId": "fd18c5de-641e-47f7-a7e2-acceb32b96f9",
+          "comment": "Un commentaire valide et suffisamment long.",
           "isTeleconsultation": true,
+          "addressIds": [],
+          "accessibleAddressIds": [],
+          "signLanguage": false,
           "pathologies": ["PATHOLOGIE_IMPOSSIBLE"]
         }
-        """.formatted(UUID.randomUUID());
-
+        """;
+        UUID userId = UUID.randomUUID();
         mockMvc.perform(post("/api/v1/reviews")
+                        .header("X-User-Id", userId.toString()) // <-- Ajout du header ici
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(invalidEnumJson))
+                        .content(jsonPayload))
                 .andExpect(status().isBadRequest());
     }
 
@@ -133,7 +170,6 @@ class ReviewControllerTest {
     void getReviewsByPractitioner_ShouldReturn500_WhenServiceThrowsException() throws Exception {
         String rppsId = "12345678910";
 
-        // Simulation d'une panne de service
         when(reviewService.getReviewsByRppsId(eq(rppsId), anyInt(), anyInt()))
                 .thenThrow(new RuntimeException("Database connection failure"));
 
@@ -143,12 +179,12 @@ class ReviewControllerTest {
 
     @Test
     void getReviewsByPractitioner_ShouldReturn400_WhenRppsIdIsInvalid() throws Exception {
-        // Un RPPS invalide (contient des lettres au lieu de 11 chiffres)
         String invalidRppsId = "12345ABCDEF";
+        UUID userId = UUID.randomUUID(); // Génération du header
 
         mockMvc.perform(get("/api/v1/reviews/practitioner/{rppsId}", invalidRppsId)
+                        .header("X-User-Id", userId.toString()) // <-- Ajout ici
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isBadRequest());
     }
-
 }

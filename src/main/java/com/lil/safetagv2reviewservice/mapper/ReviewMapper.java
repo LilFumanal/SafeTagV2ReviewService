@@ -16,7 +16,7 @@ public class ReviewMapper {
         review.setAddressIds(dto.addressIds());
         review.setComment(dto.comment());
         review.setTeleconsultation(dto.isTeleconsultation());
-        review.setWheelchairAccessible(dto.wheelchairAccessible());
+        review.setAccessibleAddressIds(dto.accessibleAddressIds()); // MAJ ici
         review.setSignLanguage(dto.signLanguage());
         review.setPathologies(dto.pathologies());
         return review;
@@ -30,7 +30,7 @@ public class ReviewMapper {
                 entity.getAddressIds(),
                 entity.getComment(),
                 entity.isTeleconsultation(),
-                entity.isWheelchairAccessible(),
+                entity.getAccessibleAddressIds(), // MAJ ici
                 entity.isSignLanguage(),
                 entity.getPathologies(),
                 entity.getCreatedAt(),

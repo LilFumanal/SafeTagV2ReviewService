@@ -14,7 +14,7 @@ public record ReviewResponseDTO(
         List<UUID> addressIds,
         String comment,
         boolean isTeleconsultation,
-        boolean wheelchairAccessible,
+        List<UUID> accessibleAddressIds,
         boolean signLanguage,
         List<PathologyFamily> pathologies,
         LocalDateTime createdAt,
