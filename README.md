@@ -40,20 +40,28 @@ Permet de soumettre un nouvel avis sur un praticien.
 **Payload (Body JSON) attendu :**
 ```json
 {
-  "rppsId": "12345678901",
-  "comment": "Texte de l'avis...",
-  "addressIds": ["id-adresse-1"], 
-  "isTeleconsultation": false,
-  "pathologies": ["TROUBLE_ANXIEUX", "DEPRESSION"], 
-  "tags": [
+  "rppsId": "10101912421",
+  "userId": "d3b07384-d113-49cd-a5d6-83a061488c03",
+  "comment": "Médecin très à l'écoute et particulièrement attentif aux besoins spécifiques.",
+  "isTeleconsultation": true,
+  "addressIds": [
+    "7fe7581b-800a-4b95-a22a-f9eb6e2f1832"
+  ],
+  "addressAccessibilities": [
     {
-      "category": "HANDICAP",
-      "vote": "NEGATIVE"
-    },
-    {
-      "category": "GENRE",
-      "vote": "NEUTRAL"
+      "addressId": "7fe7581b-800a-4b95-a22a-f9eb6e2f1832",
+      "accessible": true
     }
+  ],
+  "signLanguage": false,
+  "languages": [
+    "FRENCH",
+    "ENGLISH"
+  ],
+  "customLanguage": "Arabe dialectal (Darija)",
+  "pathologies": [
+    "TROUBLE_ANXIEUX",
+    "DEPRESSION"
   ]
 }
 ```
