@@ -23,8 +23,6 @@ public interface ReviewRepository extends JpaRepository<Review, UUID> {
     Page<ReviewResponseDTO> findByUserId(UUID userId, Pageable pageable);
     Page<Review> findByRppsIdAndStatus(String rppsId, ReviewStatus status, Pageable pageable);
 
-    Optional<Review> findById(UUID reviewId, Pageable pageable);
-
     // Filtre : "Quels praticiens ont au moins une adresse accessible ?"
     @Query("SELECT DISTINCT r.rppsId FROM Review r JOIN r.accessibleAddressIds addr WHERE r.status = 'APPROVED'")
     Page<String> findRppsIdsWithWheelchairAccess(Pageable pageable);

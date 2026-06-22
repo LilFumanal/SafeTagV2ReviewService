@@ -1,6 +1,7 @@
 package com.lil.safetagv2reviewservice.entity;
 import com.lil.safetagv2reviewservice.domain.PathologyFamily;
 import com.lil.safetagv2reviewservice.domain.ReviewStatus;
+import com.lil.safetagv2reviewservice.domain.ThreeStateAnswer;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.AssertTrue;
 import jakarta.validation.constraints.NotBlank;
@@ -92,10 +93,19 @@ public class Review {
     private String rejectionReason;
 
     @ElementCollection
-    @CollectionTable(name = "review_accessible_address_ids", joinColumns = @JoinColumn(name = "review_id"))
-    @Column(name = "address_id")
-    private List<UUID> accessibleAddressIds = new ArrayList<>();
+    @CollectionTable(name = "review_address_accessibility", joinColumns = @JoinColumn(name = "review_id"))
+    private List<AddressAccessibility> addressAccessibility = new ArrayList<>();
 
-    @Column(nullable = false)
-    private boolean signLanguage = false; // Compétence du praticien (LSF)
+    @Enumerated(EnumType.STRING)
+    @Column(name = "sign_language", nullable = false)
+    private ThreeStateAnswer signLanguage = ThreeStateAnswer.UNKNOWN;
+
+    // --- Langues parlées par le praticien ---
+    @ElementCollection
+    @CollectionTable(name = "review_languages", joinColumns = @JoinColumn(name = "review_id"))
+    @Column(name = "language_code")
+    private List<String> languages = new ArrayList<>(); // Ex: "FR", "EN", "ES", etc.
+
+    @Column(name = "custom_language", length = 100)
+    private String customLanguage; // Pour l'option "Autre" remplie par l'utilisateur
 }

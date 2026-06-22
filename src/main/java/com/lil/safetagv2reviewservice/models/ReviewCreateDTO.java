@@ -1,6 +1,7 @@
 package com.lil.safetagv2reviewservice.models;
 
 import com.lil.safetagv2reviewservice.domain.PathologyFamily;
+import com.lil.safetagv2reviewservice.domain.ThreeStateAnswer;
 import jakarta.validation.constraints.AssertTrue;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -15,13 +16,19 @@ public record ReviewCreateDTO(
         List<UUID> addressIds,
         @NotBlank @Size(min = 10) String comment,
         boolean isTeleconsultation,
-        List<UUID> accessibleAddressIds,
-        boolean signLanguage,
+
+        // --- Accessibilité PMR par adresse ---
+        List<AddressAccessibilityDTO> addressAccessibility,
+
+        // --- Langues & LSF ---
+        @NotNull ThreeStateAnswer signLanguage,
+        List<String> languages,
+        String customLanguage,
+
         List<PathologyFamily> pathologies
 ) {
     @AssertTrue(message = "Veuillez renseigner au moins un mode de consultation (visio ou adresse physique)")
     public boolean isConsultationModeValid() {
         return isTeleconsultation || (addressIds != null && !addressIds.isEmpty());
     }
-
 }
