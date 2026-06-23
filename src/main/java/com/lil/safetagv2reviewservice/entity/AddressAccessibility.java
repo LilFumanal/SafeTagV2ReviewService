@@ -1,12 +1,12 @@
 package com.lil.safetagv2reviewservice.entity;
 
-import com.lil.safetagv2reviewservice.domain.ThreeStateAnswer;
-import jakarta.persistence.Column;
-import jakarta.persistence.Embeddable;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
+import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
+
+import java.util.Map;
 import java.util.UUID;
 
 @Embeddable
@@ -14,10 +14,13 @@ import java.util.UUID;
 @Setter
 public class AddressAccessibility {
 
+    @Id
     @Column(name = "address_id", nullable = false)
     private UUID addressId;
 
-    @Enumerated(EnumType.STRING)
-    @Column(name = "accessible", nullable = false)
-    private ThreeStateAnswer accessible = ThreeStateAnswer.UNKNOWN;
+    // Stockage flexible des données brutes venant de l'API AccesLibre
+    @JdbcTypeCode(SqlTypes.JSON)
+    @Column(name = "acceslibre_data", columnDefinition = "jsonb")
+    private Map<String, Object> accesLibreData;
+
 }
