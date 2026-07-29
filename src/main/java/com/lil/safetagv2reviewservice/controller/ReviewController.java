@@ -1,6 +1,5 @@
 package com.lil.safetagv2reviewservice.controller;
 
-import com.lil.safetagv2reviewservice.domain.PathologyFamily;
 import com.lil.safetagv2reviewservice.domain.TagCategory;
 import com.lil.safetagv2reviewservice.entity.Review;
 import com.lil.safetagv2reviewservice.models.ReviewCreateDTO;
@@ -10,7 +9,6 @@ import com.lil.safetagv2reviewservice.service.ReviewService;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Pattern;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
@@ -42,13 +40,13 @@ public class ReviewController {
 
     // Récupérer les avis d'un praticien spécifique (PAGINÉ)
     @GetMapping("/practitioner/{rppsId}")
-    public ResponseEntity<Page<Review>> getReviewsByPractitioner(
+    public ResponseEntity<Page<ReviewResponseDTO>> getReviewsByPractitioner(
             @RequestHeader("X-User-Id") UUID userId,
             @PathVariable @Pattern(regexp = "^\\d{11}$", message = "Le numéro RPPS doit contenir exactement 11 chiffres") String rppsId,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size) {
 
-        Page<Review> reviews = reviewService.getReviewsByRppsId(rppsId, page, size);
+        Page<ReviewResponseDTO> reviews = reviewService.getReviewsByRppsId(rppsId, page, size);
         return ResponseEntity.ok(reviews);
     }
 
@@ -71,16 +69,10 @@ public class ReviewController {
     }
 
     @GetMapping("/me")
-    public ResponseEntity<Page<ReviewResponseDTO>> getMyReviews(
-            @RequestHeader("X-User-Id") UUID userId,
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size) {
-
-        // Assure-toi que reviewService.getReviewsByUser mappe bien la Page<Review> en Page<ReviewResponseDTO>
-        Page<ReviewResponseDTO> reviews = reviewService.getReviewsByUser(userId, PageRequest.of(page, size));
+    public ResponseEntity<List<ReviewResponseDTO>> getMyReviews(@RequestHeader("X-User-Id") UUID userId) {
+        List<ReviewResponseDTO> reviews = reviewService.getReviewsByUser(userId);
         return ResponseEntity.ok(reviews);
     }
-
 
     @PutMapping("/{id}")
     public ResponseEntity<ReviewResponseDTO> updateReview(
@@ -92,38 +84,14 @@ public class ReviewController {
         return ResponseEntity.ok(updated);
     }
 
-    // 2. Ajout de la pagination pour la langue des signes
     @GetMapping("/search-filters/sign-language")
-    public ResponseEntity<Page<String>> getFilterSignLanguage(
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "20") int size) {
-
-        return ResponseEntity.ok(reviewService.getRppsWithSignLanguage(PageRequest.of(page, size)));
+    public List<String> getFilterSignLanguage() {
+        return reviewService.getRppsWithSignLanguage();
     }
 
-    // 3. Ajout de la pagination pour l'accès PMR
     @GetMapping("/search-filters/wheelchair-accessible")
-    public ResponseEntity<Page<String>> getFilterWheelchair(
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "20") int size) {
-
-        return ResponseEntity.ok(reviewService.getRppsWithWheelchairAccess(PageRequest.of(page, size)));
-    }
-    @GetMapping("/search-filters/pathology/{family}")
-    public ResponseEntity<Page<String>> getFilterByPathology(
-            @PathVariable PathologyFamily family,
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "20") int size) {
-
-        return ResponseEntity.ok(reviewService.getRppsByPathology(family, PageRequest.of(page, size)));
+    public List<String> getFilterWheelchair() {
+        return reviewService.getRppsWithWheelchairAccess();
     }
 
-    @GetMapping("/search-filters/missing-tags")
-    public ResponseEntity<Page<String>> getMissingTagsFilter(
-            @RequestParam(required = false) List<TagCategory> categories,
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "20") int size) {
-
-        return ResponseEntity.ok(reviewService.getRppsMissingTags(categories, PageRequest.of(page, size)));
-    }
 }

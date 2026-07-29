@@ -2,7 +2,6 @@ package com.lil.safetagv2reviewservice.models;
 
 import com.lil.safetagv2reviewservice.domain.PathologyFamily;
 import com.lil.safetagv2reviewservice.domain.ReviewStatus;
-import com.lil.safetagv2reviewservice.domain.ThreeStateAnswer;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -15,15 +14,8 @@ public record ReviewResponseDTO(
         List<UUID> addressIds,
         String comment,
         boolean isTeleconsultation,
-
-        // --- Accessibilité PMR par adresse ---
-        List<AddressAccessibilityDTO> addressAccessibility,
-
-        // --- Langues & LSF ---
-        ThreeStateAnswer signLanguage,
-        List<String> languages,
-        String customLanguage,
-
+        boolean wheelchairAccessible,
+        boolean signLanguage,
         List<PathologyFamily> pathologies,
         LocalDateTime createdAt,
         ReviewStatus status
