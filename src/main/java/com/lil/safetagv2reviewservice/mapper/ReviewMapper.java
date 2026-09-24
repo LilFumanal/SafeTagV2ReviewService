@@ -20,7 +20,7 @@ public class ReviewMapper {
         review.setUserId(dto.userId());
         review.setAddressIds(dto.addressIds());
         review.setComment(dto.comment());
-        review.setTeleconsultation(dto.isTeleconsultation());
+        review.setTeleconsultation(Boolean.TRUE.equals(dto.isTeleconsultation()));
         review.setPathologies(dto.pathologies());
         if (dto.tags() != null) {
             List<ReviewTag> tags = dto.tags().stream()

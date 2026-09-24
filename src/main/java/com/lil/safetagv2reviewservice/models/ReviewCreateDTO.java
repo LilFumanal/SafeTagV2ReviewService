@@ -13,14 +13,15 @@ import java.util.UUID;
 public record ReviewCreateDTO(
         @NotBlank String rppsId,
         @NotNull UUID userId,
-        List<UUID> addressIds,
+        @NotNull List<UUID> addressIds,
         @NotBlank @Size(min = 10) String comment,
-        boolean isTeleconsultation,
+        Boolean isTeleconsultation,
         List<PathologyFamily> pathologies,
         List<TagDTO> tags
 ) {
     @AssertTrue(message = "Veuillez renseigner au moins un mode de consultation (visio ou adresse physique)")
-public boolean isConsultationModeValid() {
-    return isTeleconsultation || (addressIds != null && !addressIds.isEmpty());
-}
+    public boolean consultationModeValid() {
+        boolean teleconsult = Boolean.TRUE.equals(isTeleconsultation);
+        return isTeleconsultation || (addressIds != null && !addressIds.isEmpty());
+    }
 }

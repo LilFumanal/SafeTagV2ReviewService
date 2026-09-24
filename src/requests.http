@@ -1,20 +1,23 @@
 ### Créer un avis
 POST http://localhost:8082/api/v1/reviews
 Content-Type: application/json
+X-User-Id: 7bc0a0f1-10f9-49c0-9f82-5457e38abcd4
 
 {
   "rppsId": "12345678899",
-  "userId": "u123e4567-e89b-12d3-a456-426614174000",
+  "userId": "7bc0a0f1-10f9-49c0-9f82-5457e38abcd4",
   "addressIds": ["123e4567-e89b-12d3-a456-426614174001"],
   "comment": "Test minimal"
 }
+
 ### Créer un avis 2
 POST http://localhost:8082/api/v1/reviews
 Content-Type: application/json
+X-User-Id: 7bc0a0f1-10f9-49c0-9f82-5457e38abcd4
 
 {
-  "rppsId": "12345678899",
-  "userId": "123e4567-e89b-12d3-a456-426614174000",
+  "rppsId": "12345678890",
+  "userId": "7bc0a0f1-10f9-49c0-9f82-5457e38abcd4",
   "addressIds": ["123e4567-e89b-12d3-a456-426614174001"],
   "comment": "bof, un con je vous jure",
   "tags": [
@@ -28,9 +31,11 @@ Content-Type: application/json
     }
   ]
 }
+
 ### Créer un avis 3
 POST http://localhost:8082/api/v1/reviews
 Content-Type: application/json
+X-User-Id: 123e4567-e89b-12d3-a456-426614174000
 
 {
   "rppsId": "123456788",
@@ -48,5 +53,7 @@ Content-Type: application/json
     }
   ]
 }
+
 ### Récupérer les avis d'un praticien
 GET http://localhost:8082/api/v1/reviews/practitioner/123456788/stats
+X-User-Id: 123e4567-e89b-12d3-a456-426614174000

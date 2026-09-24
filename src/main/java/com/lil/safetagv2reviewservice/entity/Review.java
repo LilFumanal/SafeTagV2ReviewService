@@ -79,7 +79,7 @@ public class Review {
     }
 
     @AssertTrue(message = "Veuillez renseigner au moins un mode de consultation (visio ou adresse physique)")
-    public boolean isConsultationModeValid() {
+    public boolean consultationModeValid() {
         boolean hasAddress = this.addressIds != null && !this.addressIds.isEmpty();
 
         // Valide si c'est une téléconsultation OU s'il y a au moins une adresse
