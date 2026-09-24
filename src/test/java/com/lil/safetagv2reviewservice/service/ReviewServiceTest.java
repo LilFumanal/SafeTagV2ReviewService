@@ -1,11 +1,14 @@
 package com.lil.safetagv2reviewservice.service;
 
 import com.lil.safetagv2reviewservice.client.RppsClient;
+import com.lil.safetagv2reviewservice.domain.ReviewStatus;
 import com.lil.safetagv2reviewservice.domain.TagCategory;
 import com.lil.safetagv2reviewservice.domain.TagVote;
 import com.lil.safetagv2reviewservice.entity.Review;
 import com.lil.safetagv2reviewservice.entity.ReviewTag;
 import com.lil.safetagv2reviewservice.exception.ResourceNotFoundException;
+import com.lil.safetagv2reviewservice.models.ReviewCreateDTO;
+import com.lil.safetagv2reviewservice.models.ReviewResponseDTO;
 import com.lil.safetagv2reviewservice.repository.ReviewRepository;
 import com.lil.safetagv2reviewservice.repository.ReviewTagRepository;
 import org.junit.jupiter.api.Test;
@@ -14,6 +17,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.time.LocalDateTime;
 import java.util.*;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -40,29 +44,58 @@ class ReviewServiceTest {
 
     @InjectMocks
     private ReviewService reviewService;
+    @Mock
+    private com.lil.safetagv2reviewservice.mapper.ReviewMapper reviewMapper;
 
     @Test
     void createReview_ShouldSetReviewInTagsAndSave() {
-        // Préparation (Arrange)
-        Review review = new Review();
+        // Arrange
+        UUID userId = UUID.randomUUID();
+        ReviewCreateDTO dto = new ReviewCreateDTO(
+                "12345678910",
+                userId,
+                List.of(),
+                "Un commentaire tout à fait correct",
+                false,
+                List.of(),
+                List.of()
+        );
+
         ReviewTag tag1 = new ReviewTag();
         ReviewTag tag2 = new ReviewTag();
+
+        Review review = new Review();
         review.setRppsId("12345678910");
-        review.setTags(List.of(tag1, tag2));
-        review.setUserId(java.util.UUID.randomUUID());
         review.setComment("Un commentaire tout à fait correct");
+        review.setTags(List.of(tag1, tag2));
 
-        when(userClient.userExists(any(UUID.class))).thenReturn(true);
+        ReviewResponseDTO expectedResponse = new ReviewResponseDTO(
+                UUID.randomUUID(),
+                "12345678910",
+                userId,
+                List.of(),
+                "Un commentaire tout à fait correct",
+                false,
+                List.of(),
+                List.of(), // tags
+                LocalDateTime.now(),
+                ReviewStatus.APPROVED
+        );
+
+        when(reviewMapper.toEntity(dto)).thenReturn(review);
+        when(reviewRepository.existsByUserIdAndRppsId(userId, "12345678910")).thenReturn(false);
+        when(userClient.userExists(userId)).thenReturn(true);
+        when(moderationClient.moderateComment(anyString())).thenReturn(ReviewStatus.APPROVED);
         when(reviewRepository.save(any(Review.class))).thenReturn(review);
+        when(reviewMapper.toResponseDTO(review)).thenReturn(expectedResponse);
 
-        // Exécution (Act)
-        Review savedReview = reviewService.createReview(review);
+        // Act
+        ReviewResponseDTO result = reviewService.createReview(dto, userId);
 
-        // Vérification (Assert)
-        assertNotNull(savedReview);
-        assertEquals(review, tag1.getReview()); // Vérifie la relation bidirectionnelle
-        assertEquals(review, tag2.getReview());
-        verify(reviewRepository, times(1)).save(review);
+        // Assert
+        assertNotNull(result);
+        assertEquals(expectedResponse, result);
+        verify(reviewRepository).save(review);
     }
 
     @Test

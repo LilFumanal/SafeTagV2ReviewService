@@ -13,10 +13,8 @@ import java.util.UUID;
 public class UpdateReviewRequest {
 
     private String comment;
-    private List<ReviewTag> tags;
+    private List<TagDTO> tags;
     private List<PathologyFamily> pathologies;
     private List<UUID> addressIds;
     private boolean isTeleconsultation;
-    private boolean wheelchairAccessible;
-    private boolean signLanguage;
 }

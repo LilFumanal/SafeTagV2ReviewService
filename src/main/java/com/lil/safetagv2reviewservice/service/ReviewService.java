@@ -12,6 +12,7 @@ import com.lil.safetagv2reviewservice.exception.ResourceNotFoundException;
 import com.lil.safetagv2reviewservice.mapper.ReviewMapper;
 import com.lil.safetagv2reviewservice.models.ReviewCreateDTO;
 import com.lil.safetagv2reviewservice.models.ReviewResponseDTO;
+import com.lil.safetagv2reviewservice.models.TagDTO;
 import com.lil.safetagv2reviewservice.models.UpdateReviewRequest;
 import com.lil.safetagv2reviewservice.repository.ReviewRepository;
 import com.lil.safetagv2reviewservice.repository.ReviewTagRepository;
@@ -144,13 +145,12 @@ public class ReviewService {
         // 3. Mise à jour des données simples
         review.setComment(request.getComment());
         review.setTeleconsultation(request.isTeleconsultation());
-        review.setWheelchairAccessible(request.isWheelchairAccessible());
-        review.setSignLanguage(request.isSignLanguage());
 
         // 4. Gestion des collections (Tags)
         review.getTags().clear();
         if (request.getTags() != null) {
-            for (ReviewTag tag : request.getTags()) {
+            for (TagDTO tagDto : request.getTags()) {
+                ReviewTag tag = new ReviewTag(tagDto.category(), tagDto.vote(), review);
                 review.addTag(tag);
             }
         }
@@ -220,12 +220,12 @@ public class ReviewService {
         reviewRepository.save(review);
     }
 
-    public List<String> getRppsWithSignLanguage() {
-        return reviewRepository.findRppsIdsWithSignLanguage();
-    }
-
-    public List<String> getRppsWithWheelchairAccess() {
-        return reviewRepository.findRppsIdsWithWheelchairAccess();
-    }
+//    public List<String> getRppsWithSignLanguage() {
+//        return reviewRepository.findRppsIdsWithSignLanguage();
+//    }
+//
+//    public List<String> getRppsWithWheelchairAccess() {
+//        return reviewRepository.findRppsIdsWithWheelchairAccess();
+//    }
 
 }

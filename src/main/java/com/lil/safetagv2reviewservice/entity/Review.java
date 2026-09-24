@@ -92,20 +92,9 @@ public class Review {
     @Column(name = "rejection_reason", length = 500)
     private String rejectionReason;
 
-    @ElementCollection
-    @CollectionTable(name = "review_address_accessibility", joinColumns = @JoinColumn(name = "review_id"))
-    private List<AddressAccessibility> addressAccessibility = new ArrayList<>();
-
-    @Enumerated(EnumType.STRING)
-    @Column(name = "sign_language", nullable = false)
-    private ThreeStateAnswer signLanguage = ThreeStateAnswer.UNKNOWN;
-
     // --- Langues parlées par le praticien ---
     @ElementCollection
     @CollectionTable(name = "review_languages", joinColumns = @JoinColumn(name = "review_id"))
     @Column(name = "language_code")
     private List<String> languages = new ArrayList<>(); // Ex: "FR", "EN", "ES", etc.
-
-    @Column(name = "custom_language", length = 100)
-    private String customLanguage; // Pour l'option "Autre" remplie par l'utilisateur
 }

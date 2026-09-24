@@ -23,13 +23,14 @@ public interface ReviewRepository extends JpaRepository<Review, Long> {
     Page<ReviewResponseDTO> findByRppsIdAndStatus(String rppsId, ReviewStatus status, Pageable pageable);
 
     Optional<Review> findById(UUID reviewId);
-
-    // Filtre : "Quels praticiens ont au moins une adresse accessible ?"
-    @Query("SELECT DISTINCT r.rppsId FROM Review r JOIN r.accessibleAddressIds addr WHERE r.status = 'APPROVED'")
-    List<String> findRppsIdsWithWheelchairAccess();
-
-    // Filtre : "Quels praticiens pratiquent la LSF ?"
-    @Query("SELECT DISTINCT r.rppsId FROM Review r WHERE r.signLanguage = true AND r.status = 'APPROVED'")
-    List<String> findRppsIdsWithSignLanguage();
+//
+//    // Filtre : "Quels praticiens ont au moins une adresse accessible ?"
+//    @Query("SELECT DISTINCT r.rppsId FROM Review r JOIN r.addressAccessibility addr " +
+//            "WHERE r.status = 'APPROVED' AND addr.accessible = com.lil.safetagv2reviewservice.domain.ThreeStateAnswer.YES")
+//    List<String> findRppsIdsWithWheelchairAccess();
+//
+//    // Filtre : "Quels praticiens pratiquent la LSF ?"
+//    @Query("SELECT DISTINCT r.rppsId FROM Review r WHERE r.signLanguage = com.lil.safetagv2reviewservice.domain.ThreeStateAnswer.YES AND r.status = 'APPROVED'")
+//    List<String> findRppsIdsWithSignLanguage();
 
 }

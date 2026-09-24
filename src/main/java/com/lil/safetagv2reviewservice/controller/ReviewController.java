@@ -83,15 +83,4 @@ public class ReviewController {
         ReviewResponseDTO updated = reviewService.updateReview(id, userId, request);
         return ResponseEntity.ok(updated);
     }
-
-    @GetMapping("/search-filters/sign-language")
-    public List<String> getFilterSignLanguage() {
-        return reviewService.getRppsWithSignLanguage();
-    }
-
-    @GetMapping("/search-filters/wheelchair-accessible")
-    public List<String> getFilterWheelchair() {
-        return reviewService.getRppsWithWheelchairAccess();
-    }
-
 }
